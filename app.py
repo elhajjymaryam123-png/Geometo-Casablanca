@@ -5,13 +5,25 @@ from streamlit_folium import st_folium
 import requests
 import pandas as pd
 import plotly.express as px
+import os
 
 st.title("GeoMétéo — Casablanca-Settat")
 
 # Chargement  des fichiers
-regions = gpd.read_file("data/Decoupage_admin_WGS84/Decoupage_HCP_WGS84/Regions_WGS84.shp")
-provinces = gpd.read_file("data/Decoupage_admin_WGS84/Decoupage_HCP_WGS84/Provinces_WGS84.shp")
-communes  = gpd.read_file("data/Decoupage_admin_WGS84/Decoupage_HCP_WGS84/communes_WGS84.shp")
+# Chemin sur  PC
+chemin_pc = "data/Decoupage_admin_WGS84/Decoupage_HCP_WGS84/"
+# Chemin sur GitHub
+chemin_github = "data/Decoupage_HCP_WGS84/"
+
+# le bon chemin automatiquement
+if os.path.exists(chemin_pc):
+    chemin = chemin_pc
+else:
+    chemin = chemin_github
+
+regions   = gpd.read_file(chemin + "Regions_WGS84.shp")
+provinces = gpd.read_file(chemin + "Provinces_WGS84.shp")
+communes  = gpd.read_file(chemin + "communes_WGS84.shp")
 
 # Menu 1 des regions
 liste_regions = sorted(regions["libelle_fr"].tolist())
