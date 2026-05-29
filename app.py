@@ -64,7 +64,18 @@ else:
 centre = zone.geometry.centroid.iloc[0]
 
 # Créer la carte centrée sur la zone choisie
-carte = folium.Map(location=[centre.y, centre.x], zoom_start=zoom)
+carte = folium.Map(
+    location=[centre.y, centre.x],
+    zoom_start=zoom,
+    control_scale=True
+)
+# Ajouter le relief (MNT)
+folium.TileLayer(
+    tiles="https://tile.opentopomap.org/{z}/{x}/{y}.png",
+    attr="OpenTopoMap",
+    name="Relief (MNT)",
+    overlay=False
+).add_to(carte)
 
 # Dessiner le contour de la zone
 folium.GeoJson(
@@ -75,6 +86,18 @@ folium.GeoJson(
         "fillOpacity": 0      # pas de couleur à l'intérieur
     }
 ).add_to(carte)
+
+# Nom de la zone active
+nom_zone = commune_choisie or province_choisie or region_choisie
+
+# Titre
+st.subheader(f" Carte de : {nom_zone}")
+
+# Légende 
+st.markdown("**Légende :**")
+st.markdown(" **Contour rouge** : Limite administrative de la zone sélectionnée")
+st.markdown(" **Fond de carte** : Relief du terrain (MNT - OpenTopoMap)")
+st.markdown(" **Échelle** : Voir l'outil de mesure en bas à gauche de la carte")
 
 # Afficher la carte
 st_folium(carte, width=800, height=500)
@@ -103,6 +126,7 @@ tableau = pd.DataFrame({
     "Température (°C)" : donnees["daily"]["temperature_2m_max"],
     "Précipitations (mm)" : donnees["daily"]["precipitation_sum"]
 })
+tableau["Date"] = pd.to_datetime(tableau["Date"]).dt.strftime("%d/%m/%Y") #chanfement de format des dates
 
 # Afficher le tableau
 st.write("###  Prévisions météo")
@@ -110,18 +134,19 @@ st.dataframe(tableau)
 
 #affichage des graphiques
 # Sélecteur entre température et précipitations
+st.write("### Graphique Prévisions météo ")
 choix = st.radio(
     "Choisir le paramètre",
-    [" Température", " Précipitations"]
+    ["Température", "Précipitations"]
 )
 
 # Afficher le graphique selon le choix
-if choix == " Température":
+if choix == "Température":
     fig = px.line(
         tableau,
         x="Date",
         y="Température (°C)",
-        title=f"Température sur 15 jours — {zone.iloc[0]['libelle_fr'] if 'libelle_fr' in zone.columns else commune_choisie}",
+        title=f"Température sur 15 jours — {nom_zone}",
         markers=True
     )
 else:
@@ -129,7 +154,8 @@ else:
         tableau,
         x="Date",
         y="Précipitations (mm)",
-        title=f"Précipitations sur 15 jours — {zone.iloc[0]['libelle_fr'] if 'libelle_fr' in zone.columns else commune_choisie}",
+        title=f"Précipitations sur 15 jours — {nom_zone}"
     )
+
 
 st.plotly_chart(fig)
